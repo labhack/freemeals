@@ -11,6 +11,7 @@ my_stream_token1 = 'gr6r6ghf62';
 my_stream_token2 = 'oktev14vf2';
 my_stream_token3 = 'ht5emp1jmc';
 my_stream_token4 = 'r71dyuvm4l';
+my_stream_token5 = 'm16dar9t5a';
 
 %% Read file data
 ECGstr = ['D:\labhack\AllData\LABHACK\HUMAN Formal Study 1 Raw Physio Exports - BioRadio\EEG Exports 1of 3\Subject ' num2str(subject) '\Trial ' num2str(trial) '_R1_Fast.txt'];
@@ -42,6 +43,9 @@ ECG = ECGSTUFF.data(:,2);
 time_per=[score_surv.data(:,1)' 600+score_track.data(:,1)'];
 score_tot=[score_surv.data(:,4)' score_track.data(:,4)'];
 score_one=[score_surv.data(:,2)' score_surv.data(end,2)+score_track.data(:,2)'];
+score_diff = diff(score_one);
+time_diff = time_per(2:end);
+
 
 %HEART RATE DATA - BAR
 hr_vec=hr.data(:,2);
@@ -92,19 +96,27 @@ data{4}.stream.maxpoints = 1;
 data{4}.xaxis = 'x4';
 data{4}.yaxis = 'y4';
 
+data{5}.x = [];
+data{5}.y = [];
+data{5}.type = 'bar';
+data{5}.stream.token = my_stream_token5;
+data{5}.stream.maxpoints = 1;
+data{5}.xaxis = 'x5';
+data{5}.yaxis = 'y5';
+
 args.layout.xaxis1.anchor = 'y1';
 args.layout.yaxis1.title = 'ECG (mV)';
 args.layout.yaxis1.anchor = 'x1';
 args.layout.yaxis1.range = [-2 2];
 args.layout.xaxis1.domain = [0.6 1];
-args.layout.yaxis1.domain = [0.6 1];
+args.layout.yaxis1.domain = [0.7 1];
 
 args.layout.xaxis2.anchor = 'y2';
 args.layout.yaxis2.title = 'RR Amplitude';
 args.layout.yaxis2.anchor = 'x2';
 args.layout.yaxis2.range = [-2 2];
 args.layout.xaxis2.domain = [0 0.4];
-args.layout.yaxis2.domain = [0.6 1];
+args.layout.yaxis2.domain = [0.7 1];
 args.layout.xaxis2.showticklabels = 'false';
 
 args.layout.xaxis3.anchor = 'y3';
@@ -114,15 +126,23 @@ args.layout.yaxis3.title = 'EOG Vertical (mV)';
 args.layout.yaxis3.range = [min(yeye)-.1 max(yeye)+.1];
 args.layout.xaxis3.range = [min(xeye)-.1 max(xeye)+.1];
 args.layout.xaxis3.domain = [0 0.4];
-args.layout.yaxis3.domain = [0 0.4];
+args.layout.yaxis3.domain = [0.3667 0.6667];
 
 args.layout.xaxis4.anchor = 'y4';
 args.layout.yaxis4.title = 'HR Amplitude';
 args.layout.yaxis4.anchor = 'x4';
 args.layout.yaxis4.range = [-2 2];
 args.layout.xaxis4.domain = [0.6 1];
-args.layout.yaxis4.domain = [0 0.4];
+args.layout.yaxis4.domain = [0.3667 0.6667];
 args.layout.xaxis4.showticklabels = 'false';
+
+args.layout.xaxis5.anchor = 'y5';
+args.layout.yaxis5.title = 'Differential Performance';
+args.layout.yaxis5.anchor = 'x5';
+args.layout.yaxis5.range = [-2 2];
+args.layout.xaxis5.domain = [0.6 1];
+args.layout.yaxis5.domain = [0 0.3];
+args.layout.xaxis5.showticklabels = 'false';
 
 %----PLOTLY-----%
 
@@ -133,12 +153,14 @@ ps1 = plotlystream(my_stream_token1);
 ps2 = plotlystream(my_stream_token2);
 ps3 = plotlystream(my_stream_token3);
 ps4 = plotlystream(my_stream_token4);
+ps5 = plotlystream(my_stream_token5);
 
 %----open the stream----%
 ps1.open();
 ps2.open();
 ps3.open();
 ps4.open();
+ps5.open();
 
 %% Actually do the processing
 tmin = min(tECG);
@@ -152,6 +174,9 @@ while t<50
     mydata.x = getrecent(xeye,teye,t);
     mydata.y = getrecent(yeye,teye,t);
     ps3.write(mydata);
+    mydata.y = getrecent(score_diff,time_diff,t);
+    mydata.x = t;
+    ps5.write(mydata);
     
     if mod(t,time_averaging)<(time_inc) && (t<max(resp_surv.data(:,1)) || t>600)
         nfft=4*f_resp*time_averaging; %Number of fft samples
@@ -219,6 +244,7 @@ ps1.close();
 ps2.close();
 ps3.close();
 ps4.close();
+ps5.close();
 
 %DISPLAY AT THE END ?
 
